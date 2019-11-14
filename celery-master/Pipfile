@@ -10,6 +10,8 @@ autopep8 = "*"
 
 [packages]
 celery = "*"
+sqlalchemy = "*"
+psycopg2 = "*"
 
 [requires]
 python_version = "3.7"

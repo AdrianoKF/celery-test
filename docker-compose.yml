@@ -1,7 +1,7 @@
 version: "3"
 services:
   rabbitmq:
-    image: rabbitmq:3-alpine
+    image: rabbitmq:3-management
     environment:
       RABBITMQ_DEFAULT_USER: "guest"
       RABBITMQ_DEFAULT_PASS: "guest"
@@ -13,6 +13,17 @@ services:
       - rmq
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+
+  postgres:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=pass
+    networks:
+      - rmq
+    volumes:
+      - db:/var/lib/postgresql/data
+
 
   flower:
     build: flower
@@ -32,6 +43,8 @@ services:
 
   client:
     build: client
+    environment:
+      - FLASK_DEBUG=1
     depends_on:
       - rabbitmq
       - celery-master
@@ -39,9 +52,12 @@ services:
       - 5000:5000
     networks:
       - rmq
+    volumes:
+      - ./client:/app
 
 networks:
   rmq:
 
 volumes:
   rabbitmq_data:
+  db:
