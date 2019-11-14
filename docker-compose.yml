@@ -1,0 +1,47 @@
+version: "3"
+services:
+  rabbitmq:
+    image: rabbitmq:3-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+      RABBITMQ_DEFAULT_VHOST: "/"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    networks:
+      - rmq
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  flower:
+    build: flower
+    depends_on:
+      - rabbitmq
+    ports:
+      - 5555:5555
+    networks:
+      - rmq
+
+  celery-master:
+    build: celery-master
+    depends_on:
+      - rabbitmq
+    networks:
+      - rmq
+
+  client:
+    build: client
+    depends_on:
+      - rabbitmq
+      - celery-master
+    ports:
+      - 5000:5000
+    networks:
+      - rmq
+
+networks:
+  rmq:
+
+volumes:
+  rabbitmq_data:
