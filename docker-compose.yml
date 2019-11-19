@@ -24,9 +24,19 @@ services:
     volumes:
       - db:/var/lib/postgresql/data
 
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "root@example.org"
+      PGADMIN_DEFAULT_PASSWORD: "pass"
+    networks:
+      - rmq
+    ports:
+      - 8888:80
 
   flower:
     build: flower
+    command: celery flower --broker=amqp://guest:guest@rabbitmq:5672// --backend
     depends_on:
       - rabbitmq
     ports:
@@ -40,6 +50,8 @@ services:
       - rabbitmq
     networks:
       - rmq
+    volumes:
+      - ./celery-master:/app
 
   client:
     build: client

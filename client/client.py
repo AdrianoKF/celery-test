@@ -21,8 +21,8 @@ dictConfig({
 
 app = Flask(__name__)
 cel = Celery("client",
-                backend="db+postgresql://root:pass@postgres/root",
-                broker="amqp://guest:guest@rabbitmq")
+             backend="db+postgresql://root:pass@postgres/root",
+             broker="amqp://guest:guest@rabbitmq")
 
 cel.conf.task_routes = {
     '*': {'queue': 'foobar'},
@@ -30,14 +30,16 @@ cel.conf.task_routes = {
 
 pending = []
 
-@app.route("/test", methods=["GET"])
-def test():
-    task = cel.signature('add', args=(2, 3))
+
+@app.route("/add/<a>/<b>", methods=["GET"])
+def add(a, b):
+    task = cel.signature('add', args=(int(a), int(b)))
     app.logger.info(f"Task is: {task}")
     res = task.delay()
     pending.append(res.id)
 
     return jsonify({"task": {"id": res.id}})
+
 
 @app.route("/task/<uuid>", methods=["GET"])
 def get_task(uuid):
@@ -49,3 +51,19 @@ def get_task(uuid):
         'result_value': r,
         'result': result.state
     })
+
+
+@app.route("/task/async/<uuid>", methods=["GET"])
+def get_task_async(uuid):
+    result = AsyncResult(uuid, app=cel)
+    return jsonify({
+        'task_uuid': uuid,
+        'state': result.state,
+        'info': result.info
+    })
+
+
+@app.route("/task/abort/<uuid>", methods=["GET"])
+def abort_task(uuid):
+    AsyncResult(uuid, app=cel).revoke(terminate=True)
+    return jsonify({})

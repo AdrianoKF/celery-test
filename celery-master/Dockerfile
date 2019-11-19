@@ -12,4 +12,4 @@ COPY . /app/
 
 USER 1000:1000
 WORKDIR /app
-CMD celery worker -A app.app -Q foobar -P solo -E -l info
+CMD celery worker -A app.app -Q foobar -P prefork -Ofair -E -l info
